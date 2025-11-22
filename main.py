@@ -3,7 +3,7 @@ from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector # <--- NUOVO IMPORT
 
 def main():
-    video_path = "assets/video3.mp4" # O 0 per webcam
+    video_path = "assets/video4.mp4" # O 0 per webcam
     
     try:
         # 1. Inizializziamo i moduli

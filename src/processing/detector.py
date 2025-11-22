@@ -27,7 +27,7 @@ class ObjectDetector:
         """
         
         # persist=True è FONDAMENTALE: dice a YOLO di ricordare gli oggetti del frame precedente
-        results = self.model.track(source=frame, tracker="bytetrack.yaml")
+        results = self.model.track(source=frame, persist=True ,tracker="bytetrack.yaml")
         
         detected_objects = [] 
         

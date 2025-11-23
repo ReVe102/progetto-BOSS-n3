@@ -17,7 +17,8 @@ def main():
             
             if frame is None:
                 break 
-
+            frame = cv2.resize(frame, (640, 360))
+            
             # 2. Eseguiamo il Tracking
             detections = detector.detect_and_track(frame)
             

@@ -10,7 +10,7 @@ def main():
     # Usiamo il modello "Small" per un buon compromesso precisione/velocità
     model_name = "yolov8s.pt" 
     
-    # --- INIZIALIZZAZIONE MODULI ---
+    # INIZIALIZZAZIONE MODULI
     try:
         video_loader = VideoInputFacade(video_path)
         # Otteniamo le dimensioni del video per i calcoli di rischio

@@ -1,13 +1,14 @@
 from ultralytics import YOLO
 import cv2
 
+
 class ObjectDetector:
     """
     Questa classe gestisce il modello AI (YOLO).
     Si occupa di rilevare oggetti e, soprattutto, di TRACCIARLI (dare loro un ID).
     """
 
-    def __init__(self, model_name="yolov8n.pt"):
+    def __init__(self, model_name="yolov8s.pt"):
         """
         Carica il modello YOLO.
         La prima volta che lo lanci, scaricherà automaticamente i pesi da internet.
@@ -27,7 +28,7 @@ class ObjectDetector:
         """
         
         # persist=True è FONDAMENTALE: dice a YOLO di ricordare gli oggetti del frame precedente
-        results = self.model.track(source=frame, persist=True ,tracker="botsort.yaml",imgsz=640,verbose=False)
+        results = self.model.track(source=frame, persist=True ,tracker="botsort.yaml",imgsz=640,verbose=False, conf=0.3)
         detected_objects = [] 
         
         # YOLO può restituire più risultati, prendiamo il primo (il nostro frame)

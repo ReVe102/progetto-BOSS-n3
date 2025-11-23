@@ -3,7 +3,7 @@ from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector # <--- NUOVO IMPORT
 
 def main():
-    video_path = "assets/video4.mp4" # O 0 per webcam
+    video_path = "assets/video6.mp4" # O 0 per webcam
     
     try:
         # 1. Inizializziamo i moduli
@@ -18,7 +18,7 @@ def main():
             if frame is None:
                 break 
             frame = cv2.resize(frame, (640, 360))
-            
+
             # 2. Eseguiamo il Tracking
             detections = detector.detect_and_track(frame)
             

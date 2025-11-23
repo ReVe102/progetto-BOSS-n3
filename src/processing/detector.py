@@ -27,9 +27,10 @@ class ObjectDetector:
         """
         
         # persist=True è FONDAMENTALE: dice a YOLO di ricordare gli oggetti del frame precedente
-        results = self.model.track(source=frame, persist=True ,tracker="botsort.yaml",imgsz=640,verbose=False)
-        detected_objects = [] 
+        results = self.model.track(source=frame, conf=0.2, iou = 0.65, persist=True, tracker="botsort.yaml", imgsz=640)
         
+        detected_objects = [] 
+
         # YOLO può restituire più risultati, prendiamo il primo (il nostro frame)
         result = results[0]
         

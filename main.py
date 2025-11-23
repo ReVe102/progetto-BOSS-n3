@@ -5,7 +5,7 @@ from src.processing.detector import ObjectDetector
 from src.behavior.state_machine import TrackedObject
 
 def main():
-    # --- CONFIGURAZIONE ---
+    # CONFIGURAZIONE
     video_path = "assets/video4.mp4" # Sostituisci con 0 per la webcam
     # Usiamo il modello "Small" per un buon compromesso precisione/velocità
     model_name = "yolov8s.pt" 
@@ -18,7 +18,7 @@ def main():
         
         detector = ObjectDetector(model_name=model_name)
         
-        # --- NUOVO: MEMORIA DEGLI OGGETTI ---
+        # NUOVO: MEMORIA DEGLI OGGETTI 
         # Questo dizionario collegherà l'ID (es. 42) all'oggetto TrackedObject
         
         tracked_objects_memory = {} 
@@ -29,12 +29,12 @@ def main():
             frame = video_loader.get_frame()
             if frame is None: break 
 
-            # --- 1. RILEVAMENTO E TRACKING (AI) ---
+            # 1. RILEVAMENTO E TRACKING 
             detections = detector.detect_and_track(frame)
             
             current_frame_ids = set()
 
-            # --- 2. AGGIORNAMENTO STATI (LOGICA) ---
+            # 2. AGGIORNAMENTO STATI (LOGICA)
             for det in detections:
                 obj_id = det['id']
                 current_frame_ids.add(obj_id)

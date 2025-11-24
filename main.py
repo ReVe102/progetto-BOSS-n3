@@ -6,7 +6,7 @@ import traceback
 
 def main():
     # CONFIGURAZIONE
-    video_path = "assets/video9.mp4" # Sostituisci con 0 per la webcam
+    video_path = "assets/video4" # Sostituisci con 0 per la webcam
     # Usiamo il modello "Small" per un buon compromesso precisione/velocità
     model_name = "yolov8s.pt" 
     
@@ -70,7 +70,7 @@ def main():
 
             # FINESTRA DI OUTPUT 
             # Ridimensioniamo per fluidità se il video è grande
-            display_frame = cv2.resize(frame, (1080, 720))
+            display_frame = cv2.resize(frame, (1280, 720))
             cv2.imshow("SafeDrive - State Machine Test", display_frame)
             
             if cv2.waitKey(1) & 0xFF == ord('q'):

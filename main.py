@@ -1,12 +1,12 @@
 import cv2
 from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector
-# NUOVO IMPORT: Importiamo la classe che gestisce lo Stato
 from src.behavior.state_machine import TrackedObject
+import traceback
 
 def main():
     # CONFIGURAZIONE
-    video_path = "assets/video4.mp4" # Sostituisci con 0 per la webcam
+    video_path = "assets/video9.mp4" # Sostituisci con 0 per la webcam
     # Usiamo il modello "Small" per un buon compromesso precisione/velocità
     model_name = "yolov8s.pt" 
     
@@ -15,7 +15,6 @@ def main():
         video_loader = VideoInputFacade(video_path)
         # Otteniamo le dimensioni del video per i calcoli di rischio
         video_width, video_height, fps = video_loader.get_video_info()
-        
         detector = ObjectDetector(model_name=model_name)
         
         # NUOVO: MEMORIA DEGLI OGGETTI 
@@ -71,7 +70,7 @@ def main():
 
             # FINESTRA DI OUTPUT 
             # Ridimensioniamo per fluidità se il video è grande
-            display_frame = cv2.resize(frame, (1280, 720))
+            display_frame = cv2.resize(frame, (1080, 720))
             cv2.imshow("SafeDrive - State Machine Test", display_frame)
             
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -81,7 +80,7 @@ def main():
         
     except Exception as e:
         print(f"Si è verificato un errore: {e}")
-        import traceback
+
         traceback.print_exc() # Stampa l'errore completo per debug
 
 if __name__ == "__main__":

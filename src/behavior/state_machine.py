@@ -101,8 +101,6 @@ class TrackedObject:
 
     def set_state(self, new_state):
         """Cambia lo stato corrente."""
-        # Qui potremmo aggiungere logica (es. non passare da Danger a Safe istantaneamente)
-        # Per ora facciamo il cambio diretto
         if type(self.state) != type(new_state):
-            # print(f"Veicolo {self.id}: {self.state.name} -> {new_state.name}") # Debug opzionale
+            print(f"Veicolo {self.id}: {self.state.name} -> {new_state.name}") # Debug opzionale
             self.state = new_state

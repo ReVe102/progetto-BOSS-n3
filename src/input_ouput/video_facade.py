@@ -1,7 +1,5 @@
 import cv2                   #In parole semplici: è il "cervello" che permette ai computer di "vedere" e capire cosa c'è in un'immagine o in un video
 
-
-
 class VideoInputFacade:      #Inizializza la sorgente video
     def __init__(self, source_path): #parametro  video_source: Percorso del file video (es. "assets/video.mp4") oppure 0 per la webcam
                                 

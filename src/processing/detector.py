@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 import cv2
+from src.processing.tracker_memory import VisualMemory
 
 
 class ObjectDetector:

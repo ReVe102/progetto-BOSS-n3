@@ -6,7 +6,7 @@ import traceback
 
 def main():
     # CONFIGURAZIONE
-    video_path = "assets/video4.mp4" # Sostituisci con 0 per la webcam
+    video_path = "assets/video4" # Sostituisci con 0 per la webcam
     # Usiamo il modello "Small" per un buon compromesso precisione/velocità
     model_name = "yolov8s.pt" 
     

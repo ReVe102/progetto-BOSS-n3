@@ -20,9 +20,6 @@ class VideoInputFacade:      #Inizializza la sorgente video
         :return: Il frame (immagine) se disponibile, altrimenti None (fine video).
         """
         ret, frame = self.capture.read()
-
-        cv2.imshow('Frame', frame)
-        
         if not ret:
             return None
         return frame

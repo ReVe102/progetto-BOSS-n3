@@ -47,7 +47,20 @@ def main():
                 
                 # AGGIORNIAMO LO STATO
                 # L'oggetto ricalcola se è Safe, Warning o Danger
-                tracked_obj.update(det, video_width, video_height)
+                tracked_obj.update(det, video_width, video_height, fps)
+
+            # 2.5. GESTIONE OGGETTI PERSI
+            # Iteriamo su TUTTA la memoria per trovare gli oggetti che non sono in questo frame
+            for obj_id, tracked_obj in list(tracked_objects_memory.items()):
+                if obj_id not in current_frame_ids:                    
+                    # Se non è presente, incrementiamo il contatore dei frame persi
+                    tracked_obj.frames_lost += 1
+                    
+                    # Logica di Eliminazione
+                    # Se è stato perso per più di 15 frame, lo cancelliamo dalla memoria
+                    if tracked_obj.frames_lost > 15: 
+                        del tracked_objects_memory[obj_id]
+                        print(f"Eliminato Veicolo {obj_id} per perdita di traccia.")
 
             # 3. VISUALIZZAZIONE (DISEGNO)
             # Disegniamo solo gli oggetti presenti in QUESTO frame

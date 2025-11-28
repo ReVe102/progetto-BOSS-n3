@@ -101,20 +101,9 @@ class TrackedObject:
 
             # Calcolo della V_media (media della variazione di area negli ultimi 5 frame)
             avg_velocity_proxy = sum(self.velocity_history) / len(self.velocity_history) if self.velocity_history else 0
-
-            # Calcoli geometrici
-            area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-            video_area = frame_width * frame_height
-            area_ratio = area / video_area  # Quanto spazio occupa nel frame (0.0 a 1.0)
             
             center_x = new_info['center'][0]
             
-            # Definizione della "Zona Centrale" (Traiettoria di collisione)
-            # Consideriamo il 40% centrale dello schermo come la nostra corsia
-            lane_start = frame_width * 0.3
-            lane_end = frame_width * 0.7
-            is_in_lane = lane_start < center_x < lane_end
-
             # La Distanza (proxy) è l'inverso dell'area corrente (1 / area_ratio)
             DISTANCE_PROXY = 1 / area_ratio
 

@@ -3,6 +3,7 @@ from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector
 from src.behavior.state_machine import TrackedObject
 import traceback
+import time 
 
 def main():
     # CONFIGURAZIONE
@@ -25,8 +26,12 @@ def main():
         print(f"Avvio sistema... Video: {video_width}x{video_height} a {fps:.1f} FPS")
 
         while True:
+            # MISURAZIONE TEMPO INIZIALE DEL FRAME (PER CALCOLO FPS)
+            frame_start_time = time.time()
+
             frame = video_loader.get_frame()
             if frame is None: break 
+
 
             # 1. RILEVAMENTO E TRACKING 
             detections = detector.detect_and_track(frame)
@@ -61,6 +66,18 @@ def main():
                     if tracked_obj.frames_lost > 15: 
                         del tracked_objects_memory[obj_id]
                         print(f"Eliminato Veicolo {obj_id} per perdita di traccia.")
+
+            # --- CALCOLO DEL RISCHIO AGGREGATO ---
+            RISK_LEVELS = {'DANGER': 3, 'WARNING': 2, 'SAFE': 1}
+            max_risk = 'SAFE'
+            max_risk_level = 1
+            
+            for obj_id, tracked_obj in tracked_objects_memory.items():
+                if obj_id in current_frame_ids:
+                    current_level = RISK_LEVELS.get(tracked_obj.state.name, 1)
+                    if current_level > max_risk_level:
+                        max_risk_level = current_level
+                        max_risk = tracked_obj.state.name
 
             # 3. VISUALIZZAZIONE (DISEGNO)
             # Disegniamo solo gli oggetti presenti in QUESTO frame
@@ -97,6 +114,23 @@ def main():
                 cv2.putText(frame, v_str, (x1, y1 + 10), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
+            # --- MISURAZIONE TEMPO FINALE DEL FRAME ---
+            frame_end_time = time.time()
+            fps_actual = 1 / (frame_end_time - frame_start_time)
+
+            # --- DASHBOARD DI SISTEMA (IN ALTO A SINISTRA) ---
+            global_color = (0, 255, 0) # Verde
+            if max_risk == 'WARNING': global_color = (0, 255, 255) # Giallo
+            if max_risk == 'DANGER': global_color = (0, 0, 255) # Rosso
+
+            # Linea 1: Rischio Aggregato (colore globale)
+            cv2.putText(frame, f"RISCHIO AGGREGATO: {max_risk}", (10, 30), 
+                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, global_color, 2)
+
+            # Linea 2: Statistiche di Sistema (bianco)
+            cv2.putText(frame, f"FPS: {fps_actual:.1f} | Tracciati: {len(current_frame_ids)}", (10, 60), 
+                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            
             # FINESTRA DI OUTPUT 
             # Ridimensioniamo per fluidità se il video è grande
             display_frame = cv2.resize(frame, (1280, 720))

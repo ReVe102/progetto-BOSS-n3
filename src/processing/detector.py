@@ -16,7 +16,7 @@ class ObjectDetector:
         self.active_ids_in_frame = set()
 
     def detect_and_track(self, frame):
-        # 1. Invecchiamo la memoria (Gestione temporale t -> t+1) [cite: 445]
+       
         self.memory.increment_lost_counters()
 
         # Tracking YOLO base

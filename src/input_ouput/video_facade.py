@@ -21,7 +21,7 @@ class VideoInputFacade:      #Inizializza la sorgente video
         """
         ret, frame = self.capture.read()
 
-        cv2.imshow('Frame', frame)
+        #cv2.imshow('Frame', frame)
         
         if not ret:
             return None

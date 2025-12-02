@@ -3,10 +3,8 @@ import cv2                   #In parole semplici: è il "cervello" che permette 
 class VideoInputFacade:      #Inizializza la sorgente video
     def __init__(self, source_path): #parametro  video_source: Percorso del file video (es. "assets/video.mp4") oppure 0 per la webcam
                                 
-        self.video_source = source_path
-
-    # Se source_path è un numero (es. 0), lo converte in int per la webcam
-        if str(source_path).isdigit():                                          #questo controllo serve a capire se l'input è una stringa o un numero , se è una stringa e quindi un mercorso di un video lo apre altrimenti lo converte in un numero e in base al numero esegue derminati comportamenti per esempio se metto 0 si riferisce alla webcam di defaultdel pc , se metto 1 alla webcam esterna collegata tramite usb eccusb ecc 
+        self.video_source = source_path  # Se source_path è un numero (es. 0), lo converte in int per la webcam
+        if str(source_path).isdigit():     #questo controllo serve a capire se l'input è una stringa o un numero , se è una stringa e quindi un mercorso di un video lo apre altrimenti lo converte in un numero e in base al numero esegue derminati comportamenti per esempio se metto 0 si riferisce alla webcam di defaultdel pc , se metto 1 alla webcam esterna collegata tramite usb eccusb ecc 
             source_path = int(source_path)
             
         self.capture = cv2.VideoCapture(source_path)
@@ -20,8 +18,6 @@ class VideoInputFacade:      #Inizializza la sorgente video
         :return: Il frame (immagine) se disponibile, altrimenti None (fine video).
         """
         ret, frame = self.capture.read()
-
-        #cv2.imshow('Frame', frame)
         
         if not ret:
             return None

@@ -5,6 +5,8 @@ from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector
 # Importiamo il Manager e l'Observer invece delle singole classi logiche
 from src.behavior.risk_observer import TrackManager, ConsoleAlertObserver
+from src.data.db_manager import DBManager
+from src.processing.plate_recognizer import PlateRecognizer
 
 def draw_hud(frame, tracks):
     """.
@@ -40,19 +42,34 @@ def main():
         w, h, fps = video_loader.get_video_info()
         detector = ObjectDetector(model_name=model_name)
         
-            # 2. INIZIALIZZAZIONE LOGICA COMPORTAMENTALE
+        # 2. INIZIALIZZAZIONE LOGICA COMPORTAMENTALE
         manager = TrackManager()            # Il "Cervello" che gestisce le tracce
         alert_system = ConsoleAlertObserver() # La "Voce" che urla in caso di pericolo
         
         # Colleghiamo l'observer al manager
         manager.attach(alert_system)
 
+        # 3. INIZIALIZZAZIONE DB E OCR
+        print("Connessione al database in corso...")
+        try:
+            db_manager = DBManager()
+            print("Connessione al database stabilita con successo.")
+        except Exception as e:
+            print(f"ERRORE CRITICO: Impossibile connettersi al database: {e}")
+            # Non ritorniamo, continuiamo senza DB se necessario, o ritorniamo se è bloccante.
+            # return 
+
+        plate_recognizer = PlateRecognizer()
+
         print(f"Sistema avviato. Risoluzione: {w}x{h}")
 
+        frame_count = 0
         while True:
             # A. INPUT
             frame = video_loader.get_frame()
             if frame is None: break 
+            
+            frame_count += 1
 
             # B. PROCESSING (YOLO) 
             detections = detector.detect_and_track(frame)
@@ -61,7 +78,18 @@ def main():
             # Passiamo tutto al manager. Lui aggiorna gli stati e notifica se serve.
             manager.update_tracks(detections, w, h)
 
-            # D. RENDERING
+            # D. OCR (Riconoscimento Targhe)
+            for det in detections:
+                obj_id = det['id']
+                bbox = det['bbox']
+                bbox_w = bbox[2] - bbox[0]
+                
+                # ASYNC OCR: Aggiungiamo alla coda di elaborazione
+                # Eseguiamo ogni 5 frame e solo se l'oggetto è abbastanza grande
+                if frame_count % 5 == 0 and bbox_w > 80:
+                    plate_recognizer.add_to_queue(frame, obj_id, bbox)
+
+            # E. RENDERING
             # Chiediamo al manager la lista degli oggetti correnti per disegnarli
             current_objects = manager.get_tracks()
             draw_hud(frame, current_objects)

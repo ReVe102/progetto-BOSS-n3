@@ -142,7 +142,7 @@ def main():
                         max_risk_level = current_level
                         max_risk = tracked_obj.state.name
 
-            # 3. VISUALIZZAZIONE (DISEGNO)
+            # F. VISUALIZZAZIONE (DISEGNO)
             # Disegniamo solo gli oggetti presenti in QUESTO frame
             for obj_id in current_frame_ids:
                 tracked_obj = tracked_objects_memory[obj_id]

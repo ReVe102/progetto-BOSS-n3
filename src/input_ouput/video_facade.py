@@ -13,6 +13,8 @@ class VideoInputFacade:      #Inizializza la sorgente video
         
         if not self.capture.isOpened():
             raise ValueError(f"Errore: Impossibile aprire il video o la webcam: {source_path}")
+       # if type(source_path) != str or "http" in str(source_path):
+          #  self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     def get_frame(self):
         """

@@ -32,15 +32,16 @@ def draw_hud(frame, tracks):
 
 def main():
     # CONFIGURAZIONE
-    video_path = "assets/video4.mp4"  # Sostituisci con 0 per la webcam
+   # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
+    video_path = "assets/video4.mp4"
     model_name = "yolov8s.pt"
-    
+    conf_threshold = 0.50   # Soglia di confidenza per il detector
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI
         video_loader = VideoInputFacade(video_path)
         # Otteniamo le dimensioni del video per i calcoli di rischi
         w, h, fps = video_loader.get_video_info()
-        detector = ObjectDetector(model_name=model_name)
+        detector = ObjectDetector(model_name=model_name,conf_threshold=conf_threshold)
         
         # 2. INIZIALIZZAZIONE LOGICA COMPORTAMENTALE
         manager = TrackManager()            # Il "Cervello" che gestisce le tracce

@@ -8,6 +8,9 @@ from src.behavior.risk_observer import TrackManager, ConsoleAlertObserver
 from src.data.db_manager import DBManager
 from src.processing.plate_recognizer import PlateRecognizer
 
+
+
+
 def draw_hud(frame, tracks):
     """.
     Disegna box e testi sul frame.
@@ -60,6 +63,8 @@ def main():
             # return 
 
         plate_recognizer = PlateRecognizer()
+
+        #evaluator = MotEvaluator(iou_threshold=0.5, id_tag="run-1")
 
         print(f"Sistema avviato. Risoluzione: {w}x{h}")
 

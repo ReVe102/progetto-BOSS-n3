@@ -2,3 +2,5 @@ opencv-python
 ultralytics
 numpy
 supervision
+pymongo
+motmetrics

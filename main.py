@@ -34,7 +34,7 @@ def main():
     # CONFIGURAZIONE
    # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
     video_path = "assets/video4.mp4"
-    model_name = "yolov8s.pt"
+    model_name = "yolov11s.pt"
     conf_threshold = 0.50   # Soglia di confidenza per il detector
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI
@@ -46,9 +46,7 @@ def main():
         # 2. INIZIALIZZAZIONE LOGICA COMPORTAMENTALE
         manager = TrackManager()            # Il "Cervello" che gestisce le tracce
         alert_system = ConsoleAlertObserver() # La "Voce" che urla in caso di pericolo
-        
-        # Colleghiamo l'observer al manager
-        manager.attach(alert_system)
+        manager.attach(alert_system)   # Colleghiamo l'observer al manager
 
         # 3. INIZIALIZZAZIONE DB E OCR
         print("Connessione al database in corso...")

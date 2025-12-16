@@ -4,7 +4,7 @@ from src.processing.tracker_memory import VisualMemory
 
 class ObjectDetector:
     # 1. Aggiungiamo 'conf_threshold' come parametro opzionale (default 0.60)
-    def __init__(self, model_name="yolov8s.pt", conf_threshold=0.60):
+    def __init__(self, model_name="yolo11s.pt", conf_threshold=0.60):
         print(f"Caricamento modello {model_name} con soglia confidenza {conf_threshold}...")
         self.model = YOLO(model_name)
         self.target_classes = [0, 2, 3, 5, 7]

@@ -12,6 +12,7 @@ from src.processing.plate_recognizer import PlateRecognizer
 
 
 def draw_hud(frame, tracks):
+    
     """.
     Disegna box e testi sul frame.
     """

@@ -93,9 +93,24 @@ class PlateRecognizer:
         if count >= 3:
             print(f"CONFIRMED PLATE for ID {obj_id}: {most_common} (Confidence: {count}/{len(self.plate_history[obj_id])})")
             try:
+                # Check if this plate already exists in the DB
+                existing_id = self.db_manager.get_object_id_by_plate(most_common)
+                if existing_id is not None :
+                    print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Should reassign this detection from {obj_id} to {existing_id}.")
+                    # Optionally: notify main/detector to update the ID mapping here
                 self.db_manager.update_object_plate(obj_id, most_common)
             except Exception as e:
                 print(f"DB ERROR: Could not save plate for ID {obj_id}: {e}")
+                if existing_id is not None and existing_id != obj_id:
+                        print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Reassigning this detection from {obj_id} to {existing_id} and updating DB.")
+                        # Actually update the DB: merge this object's history to the known ID
+                        # Move plate history to the known ID
+                        if existing_id not in self.plate_history:
+                            self.plate_history[existing_id] = []
+                        self.plate_history[existing_id].extend(self.plate_history[obj_id])
+                        del self.plate_history[obj_id]
+                        obj_id = existing_id
+                        self.db_manager.update_object_plate(obj_id, most_common)
 
     def _recognize_from_crop(self, vehicle_crop):
         """
@@ -115,7 +130,7 @@ class PlateRecognizer:
             for (bbox_ocr, text, prob) in results:
                 text_clean = ''.join(c for c in text if c.isalnum()).upper()
                 
-                if self.is_valid_plate(text_clean) and prob > 0.25:
+                if self.is_valid_plate(text_clean) and prob > 0.35:
                     print(f"DEBUG: OCR saw '{text_clean}' (prob={prob:.2f})")
                     return text_clean
         except Exception as e:

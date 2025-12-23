@@ -16,6 +16,7 @@ class ObjectDetector:
         # Set per evitare conflitti ID nello stesso frame
         self.active_ids_in_frame = set()
 
+
     def detect_and_track(self, frame):
        
         self.memory.increment_lost_counters()
@@ -63,27 +64,16 @@ class ObjectDetector:
                 current_center = (center_x, center_y)
 
                 final_id = track_id
-                
                 # Ritaglio Texture Corrente
                 crop = frame[max(0, y1):min(h, y2), max(0, x1):min(w, x2)]
-                
+
                 if crop.size > 0:
                     # --- LOGICA TOOCM ---
-
-                     # 1. Se YOLO assegna un ID NUOVO, verifichiamo se è un "Vanish Feature" recuperabile
-                    # Controlliamo se matcha con un oggetto perso recentemente
                     matched_id = self.memory.find_match(crop, current_center)
-                    
                     if matched_id is not None:
-                        # Se troviamo un match nella storia E non c'è conflitto nel frame attuale
                         if matched_id not in self.active_ids_in_frame:
                             final_id = matched_id
-                            # Trucco: Aggiungiamo il vecchio ID ai "presenti" per evitare che altri lo usino
                             self.active_ids_in_frame.add(final_id)
-                    
-                     # 2. DYNAMIC UPDATE:
-                    # Indipendentemente se l'ID è vecchio o recuperato, AGGIORNIAMO la memoria.
-                    # Questo permette al sistema di "imparare" il nuovo aspetto dell'auto (es. se ha girato).
                     self.memory.update_memory(final_id, crop, current_center)
 
                 obj_data = {
@@ -93,5 +83,5 @@ class ObjectDetector:
                     "center": current_center
                 }
                 detected_objects.append(obj_data)
-                
+
         return detected_objects

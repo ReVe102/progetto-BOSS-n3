@@ -1,3 +1,4 @@
+
 from pymongo import MongoClient
 from datetime import datetime
 
@@ -29,7 +30,6 @@ class DBManager:
         }
         self.collection.update_one(filter_query, update_query, upsert=True)
         print(f"DB: Updated object {obj_id} with plate '{plate_text}'")
-        print(f"DB: Updated object {obj_id} with plate '{plate_text}'")
 
     def save_detection(self, obj_data):
         """
@@ -37,3 +37,13 @@ class DBManager:
         """
         obj_data["timestamp"] = datetime.now()
         self.collection.insert_one(obj_data)
+
+
+    def get_object_id_by_plate(self, plate_text):
+        """
+        Returns the track_id associated with a given plate, or None if not found.
+        """
+        doc = self.collection.find_one({"plate": plate_text})
+        if doc:
+            return doc.get("track_id")
+        return None

@@ -73,14 +73,39 @@ def main():
             # A. INPUT
             frame = video_loader.get_frame()
             if frame is None: break 
-            
             frame_count += 1
 
-            # B. PROCESSING (YOLO) 
+            # B. PROCESSING (YOLO)
+            # --- OCR PLATE MAP (sync for this frame) ---
+            ocr_plate_map = {}  # {(x1, y1, x2, y2): plate_text}
+            # Optionally, you could maintain a shared structure between PlateRecognizer and here
+            # For demo: let's assume you have a synchronous recognizer for this step
+            # (If not, you need to collect confirmed plates from PlateRecognizer's history)
+
+            # For each detection, try to get a confirmed plate from PlateRecognizer
+            for det in detections if 'detections' in locals() else []:
+                bbox = det['bbox']
+                obj_id = det['id']
+                # Try to get the most common plate for this obj_id from PlateRecognizer
+                plate = None
+                if obj_id in plate_recognizer.plate_history:
+                    counts = plate_recognizer.plate_history[obj_id]
+                    if counts:
+                        from collections import Counter
+                        c = Counter(counts)
+                        most_common, count = c.most_common(1)[0]
+                        if count >= 3:
+                            plate = most_common
+                if plate:
+                    ocr_plate_map[bbox] = plate
+
+            # Set the map for the detector to use in this frame
+            detector.ocr_plate_map = ocr_plate_map if ocr_plate_map else None
+
+            # Now run detection/tracking
             detections = detector.detect_and_track(frame)
-            
+
             # C. LOGIC (Observer + State Pattern)
-            # Passiamo tutto al manager. Lui aggiorna gli stati e notifica se serve.
             manager.update_tracks(detections, w, h)
 
             # D. OCR (Riconoscimento Targhe)
@@ -88,24 +113,17 @@ def main():
                 obj_id = det['id']
                 bbox = det['bbox']
                 bbox_w = bbox[2] - bbox[0]
-                
-                # ASYNC OCR: Aggiungiamo alla coda di elaborazione
-                # Eseguiamo ogni 5 frame e solo se l'oggetto è abbastanza grande
-                if frame_count % 5 == 0 and bbox_w > 80:
+                if frame_count % 5 == 0 and bbox_w > 70:
                     plate_recognizer.add_to_queue(frame, obj_id, bbox)
 
             # E. RENDERING
-            # Chiediamo al manager la lista degli oggetti correnti per disegnarli
             current_objects = manager.get_tracks()
             draw_hud(frame, current_objects)
 
-            # Display
             display_frame = cv2.resize(frame, (1280, 720))
             cv2.imshow("SafeDrive", display_frame)
-            
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-                
         video_loader.release()
         
     except Exception as e:

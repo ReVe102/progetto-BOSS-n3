@@ -27,7 +27,7 @@ class ObjectDetector:
             conf=self.conf_threshold, 
             iou=0.5, 
             persist=True, 
-            tracker="bytetrack.yaml", 
+            tracker="botsort.yaml", 
             imgsz=640, 
             verbose=False,
             # --- MODIFICA AGGIUNTA ---

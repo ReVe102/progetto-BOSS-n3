@@ -37,8 +37,8 @@ def draw_hud(frame, tracks):
 def main():
     # CONFIGURAZIONE
    # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
-    video_path = "assets/videoOBS/video4.mp4"
-    model_name = "yolov8s.pt"
+    video_path = "assets/videoOBS/video99.mp4"
+    model_name = "yolo11s.pt"
     conf_threshold = 0.50   # Soglia di confidenza per il detector
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI

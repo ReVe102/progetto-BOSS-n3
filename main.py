@@ -1,5 +1,6 @@
 import cv2
 import traceback
+import os
 
 from src.input_ouput.video_facade import VideoInputFacade
 from src.processing.detector import ObjectDetector
@@ -7,7 +8,6 @@ from src.processing.detector import ObjectDetector
 from src.behavior.risk_observer import TrackManager, ConsoleAlertObserver
 from src.data.db_manager import DBManager
 from src.processing.plate_recognizer import PlateRecognizer
-
 
 
 
@@ -41,6 +41,8 @@ def main():
     video_path = "assets/videoOBS/video4.mp4"
     model_name = "yolov8s.pt"  # Modello YOLO da usare
     conf_threshold = 0.50   # Soglia di confidenza per il detector
+
+    
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI
         video_loader = VideoInputFacade(video_path)
@@ -132,6 +134,7 @@ def main():
 
             # C. LOGIC (Observer + State Pattern)
             manager.update_tracks(detections, w, h)
+            
 
             # D. OCR (Riconoscimento Targhe)
             for det in detections:
@@ -150,7 +153,9 @@ def main():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         video_loader.release()
-        
+        cv2.destroyAllWindows()
+
+
     except Exception as e:
         print(f"Errore critico: {e}")
         traceback.print_exc()

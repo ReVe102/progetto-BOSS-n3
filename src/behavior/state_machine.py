@@ -77,11 +77,11 @@ class TrackedObject:
         ttc = float('inf')
         if len(self.area_history) > 0:
             # Calcoliamo la media delle ultime aree per stabilizzare il calcolo
-            avg_prev_area = sum(self.area_history[-3:]) / len(self.area_history[-3:])
+            avg_prev_area = sum(self.area_history[-5:]) / len(self.area_history[-5:])
             diff_area = area - avg_prev_area
             
             # Questo ignora le oscillazioni random di YOLO sulle auto ferme a lato
-            if diff_area > (area * 0.03): 
+            if diff_area > (area * 0.05): 
                 ttc = area / diff_area
 
         # Stampa i dati TTC nel terminale per ogni auto
@@ -97,7 +97,7 @@ class TrackedObject:
 
         # Più l'auto è in basso (y alto), più la corsia considerata è larga
         horizon_ratio = center_y / frame_height
-        lane_width = 0.15 + (horizon_ratio * 0.25)
+        lane_width = 0.10 + (horizon_ratio * 0.20)
 
         # Definizione della "Zona Centrale" (Traiettoria di collisione)
         lane_start = frame_width * (0.5 - lane_width/2)
@@ -110,23 +110,23 @@ class TrackedObject:
         if is_in_lane:
             if area_ratio > 0.20 or ttc < 3: 
                 new_proposed_state = DangerState()
-            elif area_ratio > 0.11 or ttc < 20:
+            elif area_ratio > 0.15 or ttc < 15:
                 new_proposed_state = WarningState()
         
         # Se l'auto è fuori corsia ma è gigantesca (ci sta tagliando la strada)
-        elif area_ratio > 0.50:
+        elif area_ratio > 0.45:
             new_proposed_state = WarningState()
 
         # 4. FILTRO DI STABILITÀ (Anti-Flickering)
         # Memorizziamo la proposta e cambiamo solo se c'è una maggioranza chiara
         self.state_buffer.append(new_proposed_state.name)
-        if len(self.state_buffer) > 8: 
+        if len(self.state_buffer) > 10: 
             self.state_buffer.pop(0)
 
         # Cambiamo stato solo se abbiamo almeno 6 conferme su 8 frame
         # Questo rende il sistema solido e non "nervoso"
         current_proposal_count = self.state_buffer.count(new_proposed_state.name)
-        if current_proposal_count >= 7:
+        if current_proposal_count >= 8:
             self.set_state(new_proposed_state)
 
     def set_state(self, new_state):

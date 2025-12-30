@@ -35,10 +35,11 @@ def draw_hud(frame, tracks):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
 def main():
-    # CONFIGURAZIONE
+
+# CONFIGURAZIONE
    # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
     video_path = "assets/videoOBS/video4.mp4"
-    model_name = "yolov8s.pt"
+    model_name = "yolov8s.pt"  # Modello YOLO da usare
     conf_threshold = 0.50   # Soglia di confidenza per il detector
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI
@@ -63,6 +64,9 @@ def main():
             # return 
 
         plate_recognizer = PlateRecognizer()
+        
+        # ID Mapping for reassignments
+        id_map = {}
 
         #evaluator = MotEvaluator(iou_threshold=0.5, id_tag="run-1")
 
@@ -76,6 +80,21 @@ def main():
             frame_count += 1
 
             # B. PROCESSING (YOLO)
+            
+            # Check for ID reassignments from PlateRecognizer
+            reassignments = plate_recognizer.get_pending_reassignments()
+            for old_id, new_id in reassignments:
+                print(f"[MAIN] Applying reassignment: {old_id} -> {new_id}")
+                
+                # Update existing mappings that point to old_id to point to new_id
+                for k, v in id_map.items():
+                    if v == old_id:
+                        id_map[k] = new_id
+                
+                id_map[old_id] = new_id
+                # Also merge history in PlateRecognizer so it knows about the new ID
+                plate_recognizer.merge_history(old_id, new_id)
+
             # --- OCR PLATE MAP (sync for this frame) ---
             ocr_plate_map = {}  # {(x1, y1, x2, y2): plate_text}
             # Optionally, you could maintain a shared structure between PlateRecognizer and here
@@ -104,6 +123,12 @@ def main():
 
             # Now run detection/tracking
             detections = detector.detect_and_track(frame)
+
+            # Apply ID mapping to detections
+            for det in detections:
+                # If this ID has been remapped, update it
+                if det['id'] in id_map:
+                    det['id'] = id_map[det['id']]
 
             # C. LOGIC (Observer + State Pattern)
             manager.update_tracks(detections, w, h)

@@ -11,6 +11,7 @@ class PlateRecognizer:
         self.ocr_available = False
         self.plate_history = {} # {obj_id: [list of detected plates]}
         self.processing_queue = queue.Queue()
+        self.pending_reassignments = queue.Queue() # Queue for ID reassignments
         
         try:
             print("Initializing EasyOCR...")
@@ -90,37 +91,60 @@ class PlateRecognizer:
         
         # If we have seen this plate at least 2 times (CONFIDENCE >= 2)
         # Reduced from 3 to 2 to make it easier to confirm plates
-        if count >= 3:
+        if count >= 2:
             print(f"CONFIRMED PLATE for ID {obj_id}: {most_common} (Confidence: {count}/{len(self.plate_history[obj_id])})")
             try:
                 # Check if this plate already exists in the DB
                 existing_id = self.db_manager.get_object_id_by_plate(most_common)
+                print(f"DEBUG: Existing ID for plate '{most_common}': {existing_id}")
+
                 if existing_id is not None :
-                    print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Should reassign this detection from {obj_id} to {existing_id}.")
-                    # Optionally: notify main/detector to update the ID mapping here
-                self.db_manager.update_object_plate(obj_id, most_common)
+                    if existing_id != obj_id :
+                        print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Should reassign this detection from {obj_id} to {existing_id}.")
+                        self.pending_reassignments.put((obj_id, existing_id))
+                else:
+                    # New plate, save it to DB
+                    print(f"[DB SAVE] New plate '{most_common}' for ID {obj_id}.")
+                    self.db_manager.update_object_plate(obj_id, most_common)
+
             except Exception as e:
-                print(f"DB ERROR: Could not save plate for ID {obj_id}: {e}")
-                if existing_id is not None and existing_id != obj_id:
-                        print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Reassigning this detection from {obj_id} to {existing_id} and updating DB.")
-                        # Actually update the DB: merge this object's history to the known ID
-                        # Move plate history to the known ID
-                        if existing_id not in self.plate_history:
-                            self.plate_history[existing_id] = []
-                        self.plate_history[existing_id].extend(self.plate_history[obj_id])
-                        del self.plate_history[obj_id]
-                        obj_id = existing_id
-                        self.db_manager.update_object_plate(obj_id, most_common)
+                print(f"Error in DB check/update: {e}")
+
+    def get_pending_reassignments(self):
+        """
+        Returns a list of (old_id, new_id) tuples from the queue.
+        """
+        reassignments = []
+        while not self.pending_reassignments.empty():
+            try:
+                reassignments.append(self.pending_reassignments.get_nowait())
+            except queue.Empty:
+                break
+        return reassignments
+
+    def merge_history(self, old_id, new_id):
+        """
+        Merges the plate history of old_id into new_id.
+        """
+        if old_id in self.plate_history:
+            if new_id not in self.plate_history:
+                self.plate_history[new_id] = []
+            self.plate_history[new_id].extend(self.plate_history[old_id])
+            # Keep only last 10 readings
+            if len(self.plate_history[new_id]) > 10:
+                self.plate_history[new_id] = self.plate_history[new_id][-10:]
+            del self.plate_history[old_id]
+            print(f"Merged history of {old_id} into {new_id}")
 
     def _recognize_from_crop(self, vehicle_crop):
         """
         Internal method to run OCR on a pre-cropped image.
         """
         # Preprocessing
-        gray = cv2.cvtColor(vehicle_crop, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(vehicle_crop, cv2.COLOR_RGB2GRAY)
 
         try:
-            results = self.reader.readtext(gray, detail=1, allowlist='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+            results = self.reader.readtext(gray)
             
             if not results:
                 return None

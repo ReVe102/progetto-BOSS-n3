@@ -8,10 +8,6 @@ from src.processing.detector import ObjectDetector
 from src.behavior.risk_observer import TrackManager, ConsoleAlertObserver
 from src.data.db_manager import DBManager
 from src.processing.plate_recognizer import PlateRecognizer
-from src.behavior.metric_manager import MOTMetricsManager
-
-
-
 
 
 
@@ -41,19 +37,10 @@ def draw_hud(frame, tracks):
 def main():
     # CONFIGURAZIONE
    # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
-    video_path = "assets/videoOBS/video99.mp4"
-    model_name = "yolo11s.pt"
+    video_path = "assets/videoOBS/video4.mp4"
+    model_name = "yolov8s.pt"
     conf_threshold = 0.50   # Soglia di confidenza per il detector
 
-
-    # Inizializzazione Metriche PROTETTA
-    metrics_calc = None
-    gt_path = os.path.join("assets", "gt.csv")
-    if os.path.exists(gt_path):
-        try:
-            metrics_calc = MOTMetricsManager(gt_path)
-        except Exception as e:
-            print(f"Avviso: Metriche non caricate: {e}")
     
     try:
         # 1. INIZIALIZZAZIONE COMPONENTI
@@ -97,9 +84,7 @@ def main():
             # C. LOGIC (Observer + State Pattern)
             # Passiamo tutto al manager. Lui aggiorna gli stati e notifica se serve.
             manager.update_tracks(detections, w, h)
-            if metrics_calc:
-                metrics_calc.update(frame_count, manager.get_tracks())
-
+            
 
             # D. OCR (Riconoscimento Targhe)
             for det in detections:
@@ -127,9 +112,6 @@ def main():
         video_loader.release()
         cv2.destroyAllWindows()
 
-        # Stampa il report finale se disponibile
-        if metrics_calc:
-            metrics_calc.print_summary()
 
     except Exception as e:
         print(f"Errore critico: {e}")

@@ -79,7 +79,6 @@ class TrackedObject:
             # Calcoliamo la media delle ultime aree per stabilizzare il calcolo
             avg_prev_area = sum(self.area_history[-5:]) / len(self.area_history[-5:])
             diff_area = area - avg_prev_area
-            
             # Questo ignora le oscillazioni random di YOLO sulle auto ferme a lato
             if diff_area > (area * 0.05): 
                 ttc = area / diff_area
@@ -107,8 +106,15 @@ class TrackedObject:
         # --- LOGICA DI TRANSIZIONE ROBUSTA ---
         new_proposed_state = SafeState()
 
-        if is_in_lane:
-            if area_ratio > 0.20 or ttc < 3: 
+        # ### MODIFICA PRIORITARIA ###
+        # Se il box è GRANDE (> 0.20), è DANGER a prescindere dalla posizione/corsia.
+        # Questo assicura che se è vicino rimanga Danger.
+        if area_ratio > 0.20:
+             new_proposed_state = DangerState()
+
+        # Se NON è enorme, allora controlliamo la corsia e la velocità
+        elif is_in_lane:
+            if ttc < 3: 
                 new_proposed_state = DangerState()
             elif area_ratio > 0.15 or ttc < 15:
                 new_proposed_state = WarningState()
@@ -123,7 +129,7 @@ class TrackedObject:
         if len(self.state_buffer) > 10: 
             self.state_buffer.pop(0)
 
-        # Cambiamo stato solo se abbiamo almeno 6 conferme su 8 frame
+        # Cambiamo stato solo se abbiamo almeno 8 conferme su 10 frame
         # Questo rende il sistema solido e non "nervoso"
         current_proposal_count = self.state_buffer.count(new_proposed_state.name)
         if current_proposal_count >= 8:

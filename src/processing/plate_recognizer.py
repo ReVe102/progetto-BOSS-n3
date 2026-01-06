@@ -99,9 +99,9 @@ class PlateRecognizer:
                 print(f"DEBUG: Existing ID for plate '{most_common}': {existing_id}")
 
                 if existing_id is not None :
-                    if existing_id != obj_id or existing_id == obj_id:
+                    if existing_id != obj_id:
                         print(f"[ID REASSIGN] Plate '{most_common}' already in DB with ID {existing_id}. Should reassign this detection from {obj_id} to {existing_id}.")
-                        self.pending_reassignments.put((obj_id, 7))
+                        self.pending_reassignments.put((obj_id, existing_id))
                 else:
                     # New plate, save it to DB
                     print(f"[DB SAVE] New plate '{most_common}' for ID {obj_id}.")

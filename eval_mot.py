@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import cv2
+from collections import Counter
 
 # Ensure local 'src' package is importable when running from repo root
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +13,7 @@ if SRC_PATH not in sys.path:
 from evaluation.gt_loader import init_gt_loader, get_gt_for_frame
 from evaluation.mot_evaluator import MotEvaluator
 from processing.detector import ObjectDetector
+from processing.plate_recognizer import PlateRecognizer
 
 
 def list_images_sorted(frames_dir):
@@ -42,7 +44,13 @@ def main():
     evaluator = MotEvaluator(iou_threshold=args.iou, id_tag=os.path.basename(args.frames.rstrip('/\\')) or 'run')
 
     # Init detector once
-    detector = ObjectDetector(model_name=args.model)
+    # Using conf_threshold=0.35 to improve recall and tracking continuity
+    detector = ObjectDetector(model_name=args.model, conf_threshold=0.35)
+    
+    # Init PlateRecognizer and ID map
+    plate_recognizer = PlateRecognizer()
+    id_map = {}
+    prev_preds = []
 
     for idx, img_path in enumerate(frames):
         if args.max_frames is not None and idx >= args.max_frames:
@@ -51,9 +59,60 @@ def main():
         if img is None:
             continue
 
+        # Check for ID reassignments from PlateRecognizer
+        reassignments = plate_recognizer.get_pending_reassignments()
+        for old_id, new_id in reassignments:
+            # Update existing mappings that point to old_id to point to new_id
+            for k, v in id_map.items():
+                if v == old_id:
+                    id_map[k] = new_id
+            id_map[old_id] = new_id
+            # Also merge history in PlateRecognizer so it knows about the new ID
+            plate_recognizer.merge_history(old_id, new_id)
+
+        # --- OCR PLATE MAP (sync for this frame) ---
+        ocr_plate_map = {}
+        # For each detection from previous frame, try to get a confirmed plate
+        for det in prev_preds:
+            bbox = det['bbox']
+            obj_id = det['id']
+            # Try to get the most common plate for this obj_id from PlateRecognizer
+            plate = None
+            if obj_id in plate_recognizer.plate_history:
+                counts = plate_recognizer.plate_history[obj_id]
+                if counts:
+                    c = Counter(counts)
+                    most_common, count = c.most_common(1)[0]
+                    # Lowered threshold to 2 for faster ID correction
+                    if count >= 2:
+                        plate = most_common
+            if plate:
+                ocr_plate_map[bbox] = plate
+
+        # Set the map for the detector to use in this frame
+        detector.ocr_plate_map = ocr_plate_map if ocr_plate_map else None
+
         preds = detector.detect_and_track(img)
+
+        # Apply ID mapping to detections
+        for det in preds:
+            if det['id'] in id_map:
+                det['id'] = id_map[det['id']]
+
         if args.pred_classes is not None:
             preds = [p for p in preds if int(p.get('class_id', -1)) in args.pred_classes]
+
+        # Feed PlateRecognizer
+        for det in preds:
+            obj_id = det['id']
+            bbox = det['bbox']
+            bbox_w = bbox[2] - bbox[0]
+            # Increased frequency (every 2 frames) and lowered width threshold (60px)
+            if idx % 2 == 0 and bbox_w > 60:
+                plate_recognizer.add_to_queue(img, obj_id, bbox)
+        
+        # Update prev_preds for next iteration
+        prev_preds = preds
 
         gt = get_gt_for_frame(idx)
         evaluator.update(idx, gt, preds)

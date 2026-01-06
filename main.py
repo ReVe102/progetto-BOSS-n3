@@ -38,7 +38,7 @@ def main():
 
 # CONFIGURAZIONE
    # video_path = "http://192.168.1.9:8080/video"  # Sostituisci con 0 per la webcam
-    video_path = "assets/videoOBS/video4.mp4"
+    video_path = "assets/videoOBS/videoTestFinale.mp4"  # Percorso del video di input
     model_name = "yolov8s.pt"  # Modello YOLO da usare
     conf_threshold = 0.50   # Soglia di confidenza per il detector
 
